@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApiDemoFilms", "ApiDemoFilms\ApiDemoFilms.csproj", "{F413AFF6-2EEB-488E-B90B-D61986C14D2E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiDemoFilms", "ApiDemoFilms\ApiDemoFilms.csproj", "{F413AFF6-2EEB-488E-B90B-D61986C14D2E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DAL", "DAL", "{C25BF855-658E-454C-9259-7168DF870F56}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Films.DAL", "FilmsDAL\Films.DAL.csproj", "{EF11B8A4-E390-4D97-8FA7-DC3999F6BC94}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +19,16 @@ Global
 		{F413AFF6-2EEB-488E-B90B-D61986C14D2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F413AFF6-2EEB-488E-B90B-D61986C14D2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F413AFF6-2EEB-488E-B90B-D61986C14D2E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF11B8A4-E390-4D97-8FA7-DC3999F6BC94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF11B8A4-E390-4D97-8FA7-DC3999F6BC94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF11B8A4-E390-4D97-8FA7-DC3999F6BC94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF11B8A4-E390-4D97-8FA7-DC3999F6BC94}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{EF11B8A4-E390-4D97-8FA7-DC3999F6BC94} = {C25BF855-658E-454C-9259-7168DF870F56}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {19683386-92B9-4B2D-A522-CEDF02DBDDBF}

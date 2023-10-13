@@ -1,11 +1,11 @@
 ﻿namespace ApiDemoFilms.Model
 {
-    public class Actors
+    public class User
     {
-        public int Id { get; set; }
+        public  int Id { get; set; }
+        public string NickName { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public int Birthday { get; set; }
-        public ICollection<FilmActors> FilmActors { get; set; }
     }
 }
