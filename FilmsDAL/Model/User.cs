@@ -1,7 +1,10 @@
-﻿namespace ApiDemoFilms.Model
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ApiDemoFilms.Model
 {
     public class User
     {
+        [Key]
         public  int Id { get; set; }
         public string NickName { get; set; }
         public string FirstName { get; set; }
