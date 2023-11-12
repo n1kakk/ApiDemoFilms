@@ -16,13 +16,13 @@ namespace ApiDemoFilms.Controllers
         }
 
         [HttpGet("GetIdGenres/{id}")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Genre>))]
+        [ProducesResponseType(200, Type = typeof(Genre))]
         public async Task<IActionResult> GetIdGenresAsync(int id)
         {
-            var films = await _genreRepository.GetIdGenresAsync(id);
+            var genre = await _genreRepository.GetIdGenresAsync(id);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            return Ok(films);
+            return Ok(genre);
         }
 
 
@@ -30,20 +30,20 @@ namespace ApiDemoFilms.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<Genre>))]
         public async Task<IActionResult> GetNameGenresAsync(string genreName)
         {
-            var films = await _genreRepository.GetNameGenresAsync(genreName);
+            var genres = await _genreRepository.GetNameGenresAsync(genreName);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            return Ok(films);
+            return Ok(genres);
         }
 
         [HttpGet("GetGenres")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Genre>))]
         public async Task<IActionResult> GetGenresAsync()
         {
-            var films = await _genreRepository.GetGenresAsync();
+            var genres = await _genreRepository.GetGenresAsync();
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            return Ok(films);
+            return Ok(genres);
         }
     }
 }

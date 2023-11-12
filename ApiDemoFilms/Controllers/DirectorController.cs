@@ -17,23 +17,23 @@ namespace ApiDemoFilms.Controllers
         }
 
         [HttpGet("GetIdDirectors/{id}")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Director>))]
+        [ProducesResponseType(200, Type = typeof(Director))]
         public async Task<IActionResult> GetIdDirectorsAsync(int id)
         {
-            var films = await _directorRepository.GetIdDirectorsAsync(id);
+            var director = await _directorRepository.GetIdDirectorsAsync(id);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            return Ok(films);
+            return Ok(director);
         }
 
         [HttpGet("GetDirectors")]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Director>))]
         public async Task<IActionResult> GetDirectorsAsync()
         {
-            var films = await _directorRepository.GetDirectorsAsync();
+            var directors = await _directorRepository.GetDirectorsAsync();
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            return Ok(films);
+            return Ok(directors);
         }
 
     }

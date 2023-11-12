@@ -12,9 +12,9 @@ namespace Films.DAL.Repository
             _context = context;
         }
 
-        public async Task<ICollection<Actor>> GetIdActorsAsync(int id)
+        public async Task<Actor> GetIdActorsAsync(int id)
         {
-            return await _context.Actors.Where(a => a.Id == id).ToListAsync();
+            return await _context.Actors.Where(a => a.Id == id).FirstAsync();
         }
         public async Task<ICollection<Actor>> GetActorsAsync()
         {

@@ -14,7 +14,7 @@ namespace Films.DAL.Repository
 
         public ICollection<Film> GetFilms()
         {
-            return _context.Films.Where(x=>x.Id==2).Include(g=>g.Genre).Include(d=>d.Director).ToList();
+            return _context.Films.OrderByDescending(y => y.ReleaseYear).Include(g=>g.Genre).Include(d=>d.Director).ToList();
         }
 
         public async Task<ICollection<Film>> GetGenreFilmsAsync(string genre)

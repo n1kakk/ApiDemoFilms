@@ -59,13 +59,13 @@ namespace ApiDemoFilms.Controllers
         }
 
         [HttpGet("GetIdFilms/{id}")]
-        [ProducesResponseType(200, Type = typeof(IEnumerable<Film>))]
+        [ProducesResponseType(200, Type = typeof(Film))]
         public async Task<IActionResult> GetIdFilmsAsync(int id)
         {
-            var films = await _filmRepository.GetIdFilmsAsync(id);
+            var film = await _filmRepository.GetIdFilmsAsync(id);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            return Ok(films);
+            return Ok(film);
         }
 
     }

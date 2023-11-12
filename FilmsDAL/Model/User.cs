@@ -10,5 +10,7 @@ namespace ApiDemoFilms.Model
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public int Birthday { get; set; }
+        public string Password { get; set; }
+        public string Salt { get; set; }
     }
 }
