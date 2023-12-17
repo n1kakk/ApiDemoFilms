@@ -1,11 +1,14 @@
 
 using ApiDemoFilms.Model;
+using Films.DAL.Helpers;
 using Films.DAL.Interfaces;
 using Films.DAL.Repository;
+using Films.DAL.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +16,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+// configure strongly typed settings object
+//builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
 
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -25,24 +31,18 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
 
-//use the JwtBearer middleware
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
-    {
-        //options.Authority = $"https://{builder.Configuration["Auth0:Domain"]}";
-        //options.Audience = builder.Configuration["Auth0:Audience"];
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = "myAuthServer", //издатель токена
-            ValidAudience = "myAuthClient", //потребитель токена
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("my_key"))
-        };
-    }
-    );
+builder.Services.AddTransient<IRefreshTokenRepository, TokenRepository>();
+
+builder.Services.AddSingleton<ConnectionMultiplexer>(sp =>
+{
+    return ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("RedisConnection"));
+});
+
+
+//Регистрация настроек, раздел AppSettings из файла конфигурации 
+//для настройки экземпляра класса AppSettings
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
+
 
 
 builder.Services.AddScoped<IFilmRepository, FilmRepository>();
@@ -50,6 +50,7 @@ builder.Services.AddScoped<IActorRepository, ActorRepository>();
 builder.Services.AddScoped<IDirectorRepository, DirectorRepository>();
 builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 //builder.Services.AddScoped<>
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

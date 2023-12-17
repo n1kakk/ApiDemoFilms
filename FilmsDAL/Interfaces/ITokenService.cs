@@ -7,5 +7,8 @@ namespace Films.DAL.Interfaces
     {
         public Task<TokenModel> GetRefreshTokenAsync(TokenModel tokenModel);
         public Task<TokenModel> GenerateTokenAsync(User user); 
+        public Task RevokeRefreshTokenAsync(string token);
+        public User ValidateToken(string token); //почему User??
     }
+
 }

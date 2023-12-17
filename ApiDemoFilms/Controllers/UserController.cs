@@ -13,10 +13,13 @@ namespace ApiDemoFilms.Controllers
     public class UserController: Controller
     {
         private readonly IUserRepository _userRepository;
-
-        public UserController(IUserRepository userRepository)
+        private readonly IRefreshTokenRepository _tokenRepository;
+        private readonly ITokenService _tokenService;
+        public UserController(IUserRepository userRepository, IRefreshTokenRepository tokenRepository, ITokenService tokenService)
         {
             _userRepository = userRepository;
+            _tokenRepository = tokenRepository;
+            _tokenService = tokenService;
         }
 
         [HttpGet("GetIdUsers/{id}")]
@@ -52,6 +55,7 @@ namespace ApiDemoFilms.Controllers
                 }
                 string salt = PasswordHasher.Salt();
                 string hashedPassword = PasswordHasher.HashPassword(model.Password+salt);
+ 
                 var user = new User
                 {
                     NickName = model.NickName,
@@ -63,6 +67,11 @@ namespace ApiDemoFilms.Controllers
                 };
 
                 await _userRepository.SignupAsync(user);
+
+                var tokenModel = _tokenService.GenerateTokenAsync(user);
+                await _tokenRepository.SetRefreshTokenAsync(tokenModel, model.NickName);
+
+                Console.WriteLine(tokenModel);
                 return Created("",user);
             }
                 return BadRequest(ModelState); 
@@ -72,6 +81,7 @@ namespace ApiDemoFilms.Controllers
         [HttpPost("LogIn")]
         public async Task<IActionResult> Login(LoginRequest model)
         {
+            // добавить user model для создания токена
             if (ModelState.IsValid)
             {
                 var existingUser = await _userRepository.GetNickNameUsersAsync(model.NickName);
@@ -82,10 +92,30 @@ namespace ApiDemoFilms.Controllers
                 }
                 if (existingUser != null && PasswordHasher.VerifyPassword(model.Password, existingUser.Password, existingUser.Salt))
                 {
+                    var tokenModel = _tokenService.GenerateTokenAsync(existingUser);
                     return Ok();
                 }
             }
             return Unauthorized();
+        }
+
+        [HttpGet("GetRefreshToken")]
+        public async Task<IActionResult> GetRefreshToken(string nickName)
+        {
+            var token = await _tokenRepository.GetRefreshTokenAsync(nickName);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            return Ok(token);
+        }
+
+
+
+        [HttpGet("Test")]
+        public async Task<IActionResult> Test()
+        {
+           // var token = await _tokenRepository.SetRefreshTokenAsync(new TokenModel { Token = "1234", RefreshToken = "33" }, "alena");
+            var token2 = await _tokenRepository.GetRefreshTokenAsync("alena");
+            return Ok();
         }
     }
 }
