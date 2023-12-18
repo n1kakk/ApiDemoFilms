@@ -17,9 +17,7 @@ namespace Films.DAL.Services
     public class TokenService : ITokenService
     {
         private readonly AppSettings _appSettings;
-        private readonly ConnectionMultiplexer _redis;
-        private readonly StackExchange.Redis.IDatabase _database;
-        private readonly string keyPrefix = "refreshToken:";
+
 
         private readonly IRefreshTokenRepository _tokenRepository;
 
@@ -30,25 +28,19 @@ namespace Films.DAL.Services
         public TokenService(IOptions<AppSettings> appSettings, ConnectionMultiplexer redis, IRefreshTokenRepository tokenRepository)
         {
             _appSettings = appSettings.Value;
-            _redis = redis;
-            _database = redis.GetDatabase();
-
             _tokenRepository = tokenRepository;
         }
         public async Task<TokenModel> GetRefreshTokenAsync(TokenModel tokenModel)
         {
             JwtSecurityToken jwtToken = CheckToken(tokenModel.Token, false);
             var userModel = ExtractUserFromToken(jwtToken);
-            var checkResult = CheckRefreshToken(userModel.NickName, tokenModel.RefreshToken);
-
-            var key = keyPrefix + userModel.NickName;
-            var data = _database.StringGet(key);
-            var refreshTokens = JsonSerializer.Deserialize<RefreshToken>(data);
+            var checkResult = await CheckRefreshTokenAsync(userModel.NickName, tokenModel.RefreshToken);
+            var oldRefreshToken = await _tokenRepository.GetRefreshTokenAsync(tokenModel.RefreshToken);
 
             if (checkResult == CheckRefreshTokenResult.Ok) 
-            { 
-                refreshTokens.isUsed = true;
-                Console.WriteLine(userModel.NickName);
+            {
+                oldRefreshToken.isUsed = true;
+                await _tokenRepository.SetRefreshTokenAsync(oldRefreshToken);
                 return await GenerateTokenAsync(userModel);
             }
             throw new AppException($"Refresh token is invalid {checkResult}"); //?? условие инвалид рефреш токена
@@ -86,12 +78,9 @@ namespace Films.DAL.Services
         private async Task<string> CreateRefreshToken(User user)
         {
             var id = Guid.NewGuid().ToString();
-            //refreshTokens.TryAdd(id, new RefreshToken { NickName = user.NickName, isUsed = false, Expiration = DateTime.UtcNow.AddDays(_appSettings.RefreshTokenValidityInDays) });
-            //return Task.FromResult(id);
-            var key = keyPrefix + user.NickName;
-            bool refreshTokenExists = await _database.KeyExistsAsync(key);
-            if (!refreshTokenExists) { var refreshToken = new RefreshToken { NickName = user.NickName, isUsed = false, Expiration = DateTime.UtcNow.AddDays(_appSettings.RefreshTokenValidityInDays) }; };
-            //var token = await _tokenRepository.SetRefreshTokenAsync()
+            
+            var refreshToken = new RefreshToken { NickName = user.NickName, isUsed = false, Expiration = DateTime.UtcNow.AddDays(_appSettings.RefreshTokenValidityInDays), refreshToken = id};
+            var token = await _tokenRepository.SetRefreshTokenAsync(refreshToken);
             return await Task.FromResult(id); //???
         }
 
@@ -100,9 +89,13 @@ namespace Films.DAL.Services
             throw new NotImplementedException();
         }
 
-        User ITokenService.ValidateToken(string token)
+        public Task<User> ValidateTokenAsync(string token)
         {
-            throw new NotImplementedException();
+            JwtSecurityToken jwtToken = CheckToken(token, true);
+            var userModel = ExtractUserFromToken(jwtToken);
+
+            return Task.FromResult(userModel);
+
         }
 
         private JwtSecurityToken CheckToken(string token, bool validateLifetime)
@@ -130,24 +123,21 @@ namespace Films.DAL.Services
 
         private User ExtractUserFromToken(JwtSecurityToken jwtToken)
         {
-            var nickName = jwtToken.Claims.First(x => x.Type == "nickName").Value;
+            var nickName = jwtToken.Claims.First(x => x.Type == "name").Value;
+            int i = 0;
             return new User
             {
                 NickName = nickName
             };
         }
-        private CheckRefreshTokenResult CheckRefreshToken(string nickName, string refreshToken)
+        private async Task<CheckRefreshTokenResult> CheckRefreshTokenAsync(string nickName, string refreshTokenId)
         {
-            var key = keyPrefix + nickName;
-            bool refreshTokenExists = _database.KeyExists(key);
+            var refreshToken = await _tokenRepository.GetRefreshTokenAsync(refreshTokenId);
 
-            var data = _database.StringGet(key);
-            var refreshTokens = JsonSerializer.Deserialize<RefreshToken>(data);
-
-            if (!refreshTokenExists) return CheckRefreshTokenResult.NotFound;
-            if (refreshTokens.NickName != nickName) return CheckRefreshTokenResult.Incorrect;
-            if (refreshTokens.isUsed) return CheckRefreshTokenResult.IsUsed;
-            if (refreshTokens.Expiration < DateTime.UtcNow) return CheckRefreshTokenResult.Expired;
+            if (refreshToken == null) return CheckRefreshTokenResult.NotFound;
+            if (refreshToken.NickName != nickName) return CheckRefreshTokenResult.Incorrect;
+            if (refreshToken.isUsed) return CheckRefreshTokenResult.IsUsed;
+            if (refreshToken.Expiration < DateTime.UtcNow) return CheckRefreshTokenResult.Expired;
             return CheckRefreshTokenResult.Ok;
             
         }

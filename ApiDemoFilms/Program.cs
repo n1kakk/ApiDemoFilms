@@ -1,4 +1,5 @@
 
+using ApiDemoFilms.MiddleWare;
 using ApiDemoFilms.Model;
 using Films.DAL.Helpers;
 using Films.DAL.Interfaces;
@@ -50,7 +51,10 @@ builder.Services.AddScoped<IActorRepository, ActorRepository>();
 builder.Services.AddScoped<IDirectorRepository, DirectorRepository>();
 builder.Services.AddScoped<IGenreRepository, GenreRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddSingleton<IRefreshTokenRepository, TokenRepository>();
+builder.Services.AddSingleton<ITokenService, TokenService>();
+
+
 //builder.Services.AddScoped<>
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -69,8 +73,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+
+app.UseMiddleware<JwtMiddleWare>();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 
 app.MapControllers();
 

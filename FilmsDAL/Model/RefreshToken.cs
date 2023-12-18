@@ -7,5 +7,6 @@ namespace Films.DAL.Model
         public string NickName { get; set; }
         public bool isUsed { get; set; }
         public DateTime Expiration { get; set; }
+        public string refreshToken { get; set; }
     }
 }

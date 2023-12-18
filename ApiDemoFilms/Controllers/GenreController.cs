@@ -2,6 +2,7 @@
 using Films.DAL.Interfaces;
 using Films.DAL.Repository;
 using Microsoft.AspNetCore.Mvc;
+using Films.DAL.Helpers;
 
 namespace ApiDemoFilms.Controllers
 {
@@ -15,7 +16,9 @@ namespace ApiDemoFilms.Controllers
             _genreRepository = genreRepository;
         }
 
+
         [HttpGet("GetIdGenres/{id}")]
+        [Authorize]
         [ProducesResponseType(200, Type = typeof(Genre))]
         public async Task<IActionResult> GetIdGenresAsync(int id)
         {

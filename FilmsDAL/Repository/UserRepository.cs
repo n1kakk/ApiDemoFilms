@@ -22,16 +22,12 @@ namespace Films.DAL.Repository
             return await _context.Users.Where(u => u.NickName == nickName).FirstOrDefaultAsync();
         }
 
-        public async Task SignupAsync(User user)
+        public async Task SetUserAsync(User user)
         {
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
         }
 
-        //public async Task LoginAsync(User user)
-        //{
-        //    return await _context.Users.
-        //}
 
     }
 }

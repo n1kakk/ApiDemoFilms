@@ -13,12 +13,12 @@ namespace ApiDemoFilms.Controllers
     public class UserController: Controller
     {
         private readonly IUserRepository _userRepository;
-        private readonly IRefreshTokenRepository _tokenRepository;
+        //private readonly IRefreshTokenRepository _tokenRepository;
         private readonly ITokenService _tokenService;
-        public UserController(IUserRepository userRepository, IRefreshTokenRepository tokenRepository, ITokenService tokenService)
+        public UserController(IUserRepository userRepository, ITokenService tokenService)
         {
             _userRepository = userRepository;
-            _tokenRepository = tokenRepository;
+           // _tokenRepository = tokenRepository;
             _tokenService = tokenService;
         }
 
@@ -66,13 +66,13 @@ namespace ApiDemoFilms.Controllers
                     Birthday = model.Birthday,
                 };
 
-                await _userRepository.SignupAsync(user);
+                await _userRepository.SetUserAsync(user);
 
                 var tokenModel = _tokenService.GenerateTokenAsync(user);
-                await _tokenRepository.SetRefreshTokenAsync(tokenModel, model.NickName);
+                //await _tokenRepository.SetRefreshTokenAsync(tokenModel, model.NickName);
 
                 Console.WriteLine(tokenModel);
-                return Created("",user);
+                return Ok((user, tokenModel));
             }
                 return BadRequest(ModelState); 
         }
@@ -81,7 +81,6 @@ namespace ApiDemoFilms.Controllers
         [HttpPost("LogIn")]
         public async Task<IActionResult> Login(LoginRequest model)
         {
-            // добавить user model для создания токена
             if (ModelState.IsValid)
             {
                 var existingUser = await _userRepository.GetNickNameUsersAsync(model.NickName);
@@ -92,30 +91,30 @@ namespace ApiDemoFilms.Controllers
                 }
                 if (existingUser != null && PasswordHasher.VerifyPassword(model.Password, existingUser.Password, existingUser.Salt))
                 {
-                    var tokenModel = _tokenService.GenerateTokenAsync(existingUser);
-                    return Ok();
+                    var tokenModel =await _tokenService.GenerateTokenAsync(existingUser);
+                    return Ok((tokenModel));
                 }
             }
             return Unauthorized();
         }
 
-        [HttpGet("GetRefreshToken")]
-        public async Task<IActionResult> GetRefreshToken(string nickName)
+        [HttpPost("GetRefreshToken")]
+        public async Task<IActionResult> GetRefreshToken(TokenModel tokenModel)
         {
-            var token = await _tokenRepository.GetRefreshTokenAsync(nickName);
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-            return Ok(token);
+            var tokenModelResponse = await _tokenService.GetRefreshTokenAsync(tokenModel);
+
+            return Ok(tokenModelResponse);
         }
 
 
 
-        [HttpGet("Test")]
-        public async Task<IActionResult> Test()
-        {
-           // var token = await _tokenRepository.SetRefreshTokenAsync(new TokenModel { Token = "1234", RefreshToken = "33" }, "alena");
-            var token2 = await _tokenRepository.GetRefreshTokenAsync("alena");
-            return Ok();
-        }
+
+        //[HttpGet("Test")]
+        //public async Task<IActionResult> Test()
+        //{
+        //   // var token = await _tokenRepository.SetRefreshTokenAsync(new TokenModel { Token = "1234", RefreshToken = "33" }, "alena");
+        //    var token2 = await _tokenRepository.GetRefreshTokenAsync("alena");
+        //    return Ok();
+        //}
     }
 }

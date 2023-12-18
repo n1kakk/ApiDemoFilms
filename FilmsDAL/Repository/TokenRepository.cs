@@ -20,33 +20,40 @@ namespace Films.DAL.Repository
             _database = redis.GetDatabase();
         }
 
-        public Task<TokenModel> DeleteRefreshTokenAsync(string nickName)
+        public async Task<RefreshToken> DeleteRefreshTokenAsync(string refreshTokenId)
         {
-            throw new NotImplementedException();
+            var key = keyPrefix + refreshTokenId;
+            
+            bool refreshTokenExists = await _database.KeyExistsAsync(key);
+            if (!refreshTokenExists) return null;
+            var data = await _database.StringGetAsync(key);
+
+            var token = JsonSerializer.Deserialize<RefreshToken>(data);
+            await _database.KeyDeleteAsync(key);
+
+            return token;
         }
 
-        public async Task<TokenModel> GetRefreshTokenAsync(string nickName)
+        public async Task<RefreshToken> GetRefreshTokenAsync(string refreshTokenId)
         {
-            var key = keyPrefix + nickName;
+            var key = keyPrefix + refreshTokenId;
             bool refreshTokenExists = await _database.KeyExistsAsync(key);
             if (!refreshTokenExists) return null;
 
             var data = await _database.StringGetAsync(key);
 
-            var token = JsonSerializer.Deserialize<TokenModel>(data);
+            var token = JsonSerializer.Deserialize<RefreshToken>(data);
 
             return token;
         }
 
-        public async Task<TokenModel> SetRefreshTokenAsync(Task<TokenModel> tokenModel, string nickName)
+        public async Task<RefreshToken> SetRefreshTokenAsync(RefreshToken refreshToken)
         {
-            var key = keyPrefix + nickName;
+            var key = keyPrefix + refreshToken.refreshToken;
             bool refreshTokenExists = await _database.KeyExistsAsync(key);
+            if(!refreshTokenExists) await _database.StringSetAsync(key, JsonSerializer.Serialize(refreshToken));
 
-
-            await _database.StringSetAsync(key, JsonSerializer.Serialize(tokenModel));
-
-            return await tokenModel;
+            return refreshToken;
         }
 
     }

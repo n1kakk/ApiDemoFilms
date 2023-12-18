@@ -8,7 +8,7 @@ namespace Films.DAL.Interfaces
         Task<ICollection<User>> GetIdUsersAsync(int id);
         Task<User> GetNickNameUsersAsync(string nickName);
         //Task SignupAsync(SignupRequest user);
-        Task SignupAsync(User user);
+        Task SetUserAsync(User user);
 
         //Task<User> LoginAsync(User user);
         
