@@ -1,5 +1,5 @@
 ﻿using ApiDemoFilms.Model;
-using Films.DAL.Interfaces;
+using Films.DAL.InterfacesServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiDemoFilms.Controllers
@@ -8,17 +8,17 @@ namespace ApiDemoFilms.Controllers
     [ApiController]
     public class FilmController: Controller
     {
-        private readonly IFilmRepository _filmRepository; //поле только для чтения
-        public FilmController(IFilmRepository filmRepository)
+        private readonly IFilmService _filmService; //поле только для чтения
+        public FilmController(IFilmService filmService)
         {
-            _filmRepository = filmRepository;  //ридонли установлено в конструкторе
+            _filmService = filmService;  //ридонли установлено в конструкторе
         }
 
         [HttpGet]
         [ProducesResponseType(200, Type = typeof(IEnumerable<Film>))]
-        public IActionResult GetFilms()
+        public async Task<IActionResult> GetFilms()
         {
-            var films = _filmRepository.GetFilms();
+            var films = await _filmService.GetFilms();
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -30,7 +30,7 @@ namespace ApiDemoFilms.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<Film>))]
         public async Task<IActionResult> GetGenreFilmsAsync(string genre)
         {
-            var films = await _filmRepository.GetGenreFilmsAsync(genre);
+            var films = await _filmService.GetGenreFilmsAsync(genre);
             if (!ModelState.IsValid) 
                 return BadRequest(ModelState);
 
@@ -41,7 +41,7 @@ namespace ApiDemoFilms.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<Film>))]
         public async Task<IActionResult> GetReleaseYearFilmsAsync(int releaseYear)
         {
-            var films = await _filmRepository.GetReleaseYearFilmsAsync(releaseYear);
+            var films = await _filmService.GetReleaseYearFilmsAsync(releaseYear);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
@@ -52,7 +52,7 @@ namespace ApiDemoFilms.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<Film>))]
         public async Task<IActionResult> GetDirectorFilmsAsync(int directorId)
         {
-            var films = await _filmRepository.GetDirectorFilmsAsync(directorId);
+            var films = await _filmService.GetDirectorFilmsAsync(directorId);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             return Ok(films);
@@ -62,7 +62,7 @@ namespace ApiDemoFilms.Controllers
         [ProducesResponseType(200, Type = typeof(Film))]
         public async Task<IActionResult> GetIdFilmsAsync(int id)
         {
-            var film = await _filmRepository.GetIdFilmsAsync(id);
+            var film = await _filmService.GetIdFilmsAsync(id);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             return Ok(film);

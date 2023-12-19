@@ -12,9 +12,9 @@ namespace Films.DAL.Repository
             _context = context;
         }
 
-        public ICollection<Film> GetFilms()
+        public async Task<ICollection<Film>> GetFilms()
         {
-            return _context.Films.OrderByDescending(y => y.ReleaseYear).Include(g=>g.Genre).Include(d=>d.Director).ToList();
+            return await _context.Films.OrderByDescending(y => y.ReleaseYear).Include(g=>g.Genre).Include(d=>d.Director).ToListAsync();
         }
 
         public async Task<ICollection<Film>> GetGenreFilmsAsync(string genre)
@@ -27,9 +27,9 @@ namespace Films.DAL.Repository
             return await _context.Films.Include(d => d.Director).Where(d=>d.Director.Id == directorId).ToListAsync();
         }
 
-        public async Task<ICollection<Film>> GetIdFilmsAsync(int id)
+        public async Task<Film> GetIdFilmsAsync(int id)
         {
-            return await _context.Films.Where(f => f.Id == id).Include(g=>g.Genre).Include(d => d.Director).ToListAsync();
+            return await _context.Films.Where(f => f.Id == id).Include(g=>g.Genre).Include(d => d.Director).FirstAsync();
         }
 
         public async Task<ICollection<Film>> GetReleaseYearFilmsAsync(int releaseYear)

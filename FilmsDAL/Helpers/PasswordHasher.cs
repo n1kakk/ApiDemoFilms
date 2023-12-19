@@ -6,7 +6,6 @@ namespace Films.DAL.Helpers
     public class PasswordHasher
 
     {
-
         public static string Salt()
         {
             byte[] saltBytes = new byte[16];

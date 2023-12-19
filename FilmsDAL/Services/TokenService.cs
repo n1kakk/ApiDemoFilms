@@ -1,15 +1,14 @@
 ﻿using ApiDemoFilms.Model;
 using Films.DAL.Helpers;
 using Films.DAL.Interfaces;
+using Films.DAL.InterfacesServices;
 using Films.DAL.Model;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
-using System.Collections.Concurrent;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using System.Text.Json;
 using JwtRegisteredClaimNames = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames;
 
 namespace Films.DAL.Services
@@ -18,11 +17,7 @@ namespace Films.DAL.Services
     {
         private readonly AppSettings _appSettings;
 
-
         private readonly IRefreshTokenRepository _tokenRepository;
-
-        //private readonly ConcurrentDictionary<string, RefreshTokenInfo> refreshTokens = new ConcurrentDictionary<string, RefreshTokenInfo>();
-        //private readonly ILogger _logger;
 
         //IOptions - интерфейс для упрощения доступа к настройкам приложения
         public TokenService(IOptions<AppSettings> appSettings, ConnectionMultiplexer redis, IRefreshTokenRepository tokenRepository)
@@ -41,13 +36,13 @@ namespace Films.DAL.Services
             {
                 oldRefreshToken.isUsed = true;
                 await _tokenRepository.SetRefreshTokenAsync(oldRefreshToken);
-                return await GenerateTokenAsync(userModel);
+                return await GenerateTokenAsync(userModel.NickName);
             }
             throw new AppException($"Refresh token is invalid {checkResult}"); //?? условие инвалид рефреш токена
 
         }
 
-        public async Task<TokenModel> GenerateTokenAsync(User user)
+        public async Task<TokenModel> GenerateTokenAsync(string nickName)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
             SigningCredentials signingCredentials = null;
@@ -61,8 +56,7 @@ namespace Films.DAL.Services
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(new[] {
-                //new Claim("NickName", user.NickName.ToString()),
-                new Claim(JwtRegisteredClaimNames.Name, user.NickName),
+                new Claim(JwtRegisteredClaimNames.Name, nickName),
             }),
                 Expires = DateTime.UtcNow.AddMinutes(_appSettings.TokenValidityInMinutes),
                 SigningCredentials = signingCredentials
@@ -70,18 +64,18 @@ namespace Films.DAL.Services
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            var refreshToken = await CreateRefreshToken(user);
+            var refreshToken = await CreateRefreshToken(nickName);
 
             return new TokenModel { Token = tokenHandler.WriteToken(token), RefreshToken = refreshToken };
         }
 
-        private async Task<string> CreateRefreshToken(User user)
+        private async Task<string> CreateRefreshToken(string nickName)
         {
             var id = Guid.NewGuid().ToString();
             
-            var refreshToken = new RefreshToken { NickName = user.NickName, isUsed = false, Expiration = DateTime.UtcNow.AddDays(_appSettings.RefreshTokenValidityInDays), refreshToken = id};
+            var refreshToken = new RefreshToken { NickName = nickName, isUsed = false, Expiration = DateTime.UtcNow.AddDays(_appSettings.RefreshTokenValidityInDays), refreshToken = id};
             var token = await _tokenRepository.SetRefreshTokenAsync(refreshToken);
-            return await Task.FromResult(id); //???
+            return await Task.FromResult(id); 
         }
 
         Task ITokenService.RevokeRefreshTokenAsync(string token)
@@ -95,7 +89,6 @@ namespace Films.DAL.Services
             var userModel = ExtractUserFromToken(jwtToken);
 
             return Task.FromResult(userModel);
-
         }
 
         private JwtSecurityToken CheckToken(string token, bool validateLifetime)
@@ -124,7 +117,6 @@ namespace Films.DAL.Services
         private User ExtractUserFromToken(JwtSecurityToken jwtToken)
         {
             var nickName = jwtToken.Claims.First(x => x.Type == "name").Value;
-            int i = 0;
             return new User
             {
                 NickName = nickName

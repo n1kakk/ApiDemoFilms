@@ -13,9 +13,9 @@ namespace Films.DAL.Repository
             _context = context;
         }
 
-        public async Task<ICollection<Director>> GetIdDirectorsAsync(int id)
+        public async Task<Director> GetIdDirectorsAsync(int id)
         {
-            return await _context.Directors.Where(d => d.Id == id).ToListAsync();
+            return await _context.Directors.Where(d => d.Id == id).FirstAsync();
         }
         public async Task<ICollection<Director>> GetDirectorsAsync()
         {

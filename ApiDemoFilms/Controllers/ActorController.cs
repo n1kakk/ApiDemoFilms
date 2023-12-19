@@ -1,6 +1,5 @@
 ﻿using ApiDemoFilms.Model;
-using Films.DAL.Interfaces;
-using Films.DAL.Repository;
+using Films.DAL.InterfacesServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiDemoFilms.Controllers
@@ -10,17 +9,17 @@ namespace ApiDemoFilms.Controllers
 
     public class ActorController: Controller
     {
-        private readonly IActorRepository _actorRepository;
-        public ActorController (IActorRepository actorRepository)
+        private readonly IActorService _actorService;
+        public ActorController (IActorService actorService)
         {
-            _actorRepository = actorRepository;
+            _actorService = actorService;
         }
 
         [HttpGet("GetIdActors/{id}")]
         [ProducesResponseType(200, Type = typeof(Actor))]
         public async Task<IActionResult> GetIdActorsAsync(int id)
         {
-            var actor = await _actorRepository.GetIdActorsAsync(id);
+            var actor = await _actorService.GetIdActorsAsync(id);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             return Ok(actor);
@@ -30,7 +29,7 @@ namespace ApiDemoFilms.Controllers
         [ProducesResponseType(200, Type = typeof(IEnumerable<Actor>))]
         public async Task<IActionResult> GetActorsAsync()
         {
-            var actors = await _actorRepository.GetActorsAsync();
+            var actors = await _actorService.GetActorsAsync();
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             return Ok(actors);

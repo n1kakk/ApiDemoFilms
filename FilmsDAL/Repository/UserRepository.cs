@@ -12,12 +12,12 @@ namespace Films.DAL.Repository
         {
             _context = context;
         }
-        public async Task<ICollection<User>> GetIdUsersAsync(int id)
+        public async Task<User> GetIdUsersAsync(int id)
         {
-            return await _context.Users.Where(u => u.Id == id).ToListAsync();
+            return await _context.Users.Where(u => u.Id == id).FirstAsync();
         }
 
-        public async Task <User> GetNickNameUsersAsync(string nickName)
+        public async Task<User?> GetNickNameUsersAsync(string nickName)
         {
             return await _context.Users.Where(u => u.NickName == nickName).FirstOrDefaultAsync();
         }

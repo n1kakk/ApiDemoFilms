@@ -1,10 +1,8 @@
 ﻿using ApiDemoFilms.Model;
 using Films.DAL.Helpers;
-using Films.DAL.Interfaces;
+using Films.DAL.InterfacesServices;
 using Films.DAL.Model;
-using Films.DAL.Repository;
 using Microsoft.AspNetCore.Mvc;
-using System.Reflection.Metadata.Ecma335;
 
 namespace ApiDemoFilms.Controllers
 {
@@ -12,21 +10,20 @@ namespace ApiDemoFilms.Controllers
     [ApiController]
     public class UserController: Controller
     {
-        private readonly IUserRepository _userRepository;
-        //private readonly IRefreshTokenRepository _tokenRepository;
+        private readonly IUserService _userService;
         private readonly ITokenService _tokenService;
-        public UserController(IUserRepository userRepository, ITokenService tokenService)
+        public UserController(IUserService userService, ITokenService tokenService)
         {
-            _userRepository = userRepository;
-           // _tokenRepository = tokenRepository;
+            _userService = userService;
             _tokenService = tokenService;
         }
 
         [HttpGet("GetIdUsers/{id}")]
+        [Authorize]
         [ProducesResponseType(200, Type = typeof(User))]
         public async Task<IActionResult> GetIdUsersAsync(int id)
         {
-            var user = await _userRepository.GetIdUsersAsync(id);
+            var user = await _userService.GetIdUsersAsync(id);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             return Ok(user);
@@ -36,7 +33,7 @@ namespace ApiDemoFilms.Controllers
         [ProducesResponseType(200, Type = typeof(User))]
         public async Task<IActionResult> GetNickNameUsers(string nickName)
         {
-            var user = await _userRepository.GetNickNameUsersAsync(nickName);
+            var user = await _userService.GetNickNameUsersAsync(nickName);
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             return Ok(user);
@@ -47,43 +44,26 @@ namespace ApiDemoFilms.Controllers
         {
             if (ModelState.IsValid)
             {
-                var existingUser = await _userRepository.GetNickNameUsersAsync(model.NickName);
+                var existingUser = await _userService.GetNickNameUsersAsync(model.NickName);
                 if (existingUser != null)
                 {
                     ModelState.AddModelError(string.Empty, "A user with this nickname already exists");
                     return BadRequest(ModelState);
                 }
-                string salt = PasswordHasher.Salt();
-                string hashedPassword = PasswordHasher.HashPassword(model.Password+salt);
- 
-                var user = new User
-                {
-                    NickName = model.NickName,
-                    Password = hashedPassword,
-                    Salt = salt,
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    Birthday = model.Birthday,
-                };
+                var user = await _userService.Signup(model);
+                var tokenModel = _tokenService.GenerateTokenAsync(user.NickName);
 
-                await _userRepository.SetUserAsync(user);
-
-                var tokenModel = _tokenService.GenerateTokenAsync(user);
-                //await _tokenRepository.SetRefreshTokenAsync(tokenModel, model.NickName);
-
-                Console.WriteLine(tokenModel);
                 return Ok((user, tokenModel));
             }
                 return BadRequest(ModelState); 
         }
-
 
         [HttpPost("LogIn")]
         public async Task<IActionResult> Login(LoginRequest model)
         {
             if (ModelState.IsValid)
             {
-                var existingUser = await _userRepository.GetNickNameUsersAsync(model.NickName);
+                var existingUser = await _userService.GetNickNameUsersAsync(model.NickName);
                 if (existingUser == null)
                 {
                     ModelState.AddModelError(string.Empty, "You need to sign up");
@@ -91,7 +71,7 @@ namespace ApiDemoFilms.Controllers
                 }
                 if (existingUser != null && PasswordHasher.VerifyPassword(model.Password, existingUser.Password, existingUser.Salt))
                 {
-                    var tokenModel =await _tokenService.GenerateTokenAsync(existingUser);
+                    var tokenModel =await _tokenService.GenerateTokenAsync(existingUser.NickName);
                     return Ok((tokenModel));
                 }
             }
@@ -106,15 +86,5 @@ namespace ApiDemoFilms.Controllers
             return Ok(tokenModelResponse);
         }
 
-
-
-
-        //[HttpGet("Test")]
-        //public async Task<IActionResult> Test()
-        //{
-        //   // var token = await _tokenRepository.SetRefreshTokenAsync(new TokenModel { Token = "1234", RefreshToken = "33" }, "alena");
-        //    var token2 = await _tokenRepository.GetRefreshTokenAsync("alena");
-        //    return Ok();
-        //}
     }
 }

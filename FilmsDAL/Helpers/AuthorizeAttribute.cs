@@ -1,10 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc;
-using Films.DAL.Interfaces;
-using StackExchange.Redis;
-using Films.DAL.Repository;
-using Microsoft.Extensions.Options;
-using Films.DAL.Services;
 using ApiDemoFilms.Model;
 
 namespace Films.DAL.Helpers 

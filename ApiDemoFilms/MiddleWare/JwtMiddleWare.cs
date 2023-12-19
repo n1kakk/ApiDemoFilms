@@ -1,12 +1,5 @@
 ﻿namespace ApiDemoFilms.MiddleWare;
-
-using Films.DAL.Helpers;
-using Films.DAL.Interfaces;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Text;
-
+using Films.DAL.InterfacesServices;
 public class JwtMiddleWare
 {
     private readonly RequestDelegate _next;

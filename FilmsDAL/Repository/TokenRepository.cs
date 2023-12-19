@@ -1,7 +1,7 @@
-﻿
+﻿using Films.DAL.Helpers;
 using Films.DAL.Interfaces;
 using Films.DAL.Model;
-using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System.Text.Json;
 
@@ -13,11 +13,13 @@ namespace Films.DAL.Repository
         private readonly StackExchange.Redis.IDatabase _database;
         private readonly string keyPrefix = "refreshToken:";
         private readonly string keyPrefixAccessToken = "accessToken: ";
+        private readonly AppSettings _appSettings;
 
-        public TokenRepository(ConnectionMultiplexer redis)
+        public TokenRepository(ConnectionMultiplexer redis, IOptions<AppSettings> appSettings)
         {
             _redis = redis;
             _database = redis.GetDatabase();
+            _appSettings = appSettings.Value;
         }
 
         public async Task<RefreshToken> DeleteRefreshTokenAsync(string refreshTokenId)
@@ -51,7 +53,7 @@ namespace Films.DAL.Repository
         {
             var key = keyPrefix + refreshToken.refreshToken;
             bool refreshTokenExists = await _database.KeyExistsAsync(key);
-            if(!refreshTokenExists) await _database.StringSetAsync(key, JsonSerializer.Serialize(refreshToken));
+            if(!refreshTokenExists) await _database.StringSetAsync(key, JsonSerializer.Serialize(refreshToken),TimeSpan.FromDays(_appSettings.RefreshTokenValidityInDays));
 
             return refreshToken;
         }
